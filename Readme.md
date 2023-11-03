@@ -16,5 +16,4 @@ propagation_seconds=10                             # Optional: Default 10 second
 dry_run=true/false                                 # Optional: Certificate aquisition / renewal testing
 clean_up=true/false                                # Optional: Remove credential files after build. Default is True.
 
-EOF
 ```
