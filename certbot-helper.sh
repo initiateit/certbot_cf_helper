@@ -181,4 +181,110 @@ if [ -f "Dockerfile" ]; then
     esac
 fi
 
-#Next
+# Create a container init script
+
+cat <<EOF >container_init.sh
+#!/bin/shift
+
+# start the main application or service
+exec "$@"
+
+# Infinite loop to keep container running for debug
+while true; do
+    sleep 60
+
+done
+EOF
+
+# Make executable
+chmod +x container_init.sh
+
+# Now create the Dockerfile and pass the credentials
+
+cat <<EOF >>Dockerfile
+FROM ubuntu 22.04
+
+COPY container_init.sh /root/
+
+RUN echo "Credential file path: $credential_file"
+RUN mkdir /root/.secrets
+COPY "cloudflare.ini" "/root/.secrets"
+
+# Update package lists and install required packages
+RUN apt-get update && \\
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y python3-pip && \\
+    pip3 install certbot certbot-dns-cloudflare && \\
+    apt-get clean && \\
+    rm -rf /var/lib/apt/lists/*
+EOF
+
+# start build process and then start container
+
+while true; do
+    cat <<EOF
+
+Would you like to start the build process?
+
+EOF
+
+    read -p "Enter Y for Yes or N for No: " yn
+    case $yn in
+    [Yy*)
+        ]
+        echo -p "Docker compose build process starting, please wait..."
+        echo -p "Docker container starting, please wait..."
+        break
+        ;;
+    [Nn]*)
+        echo -e "No build process started, the CMD output is the following: \n"
+        break
+        ;;
+    *)
+        echo "Please answer y/n."
+        ;;
+    esac
+
+done
+
+# Debug - Output the constructed string
+# echo "$certbot_cmd"
+
+# Construct a Dockerfile so we can build our image
+export CERTBOT_CMD="$certbot_cmd"
+echo $CERTBOT_CMD
+docker compose build --no-cache
+docker compose -p "$(hostname)" up -d
+
+# Remove the credentials file
+
+echo -e "These files were generated:\n"
+clean_up=("Dockerfile" "container_init.sh" "$credential_file")
+generated_files=""
+for file in "${clean_up[@]}"; do
+    if [ -e "$file" ]; then
+        generated_files+="$file\n"
+    fi
+done
+
+echo -e $generated_files
+while true; do
+    read -p "Would you like to cleanup the generated files [y/n] ?: " yn
+    case $yn in
+    [Yy]*)
+        for file in "${clean_up[@]}"; do
+            if [ -e "$file" ]; then
+                echo $file
+            fi
+        done
+        echo -e "\nFiles deleted"
+        break
+        ;;
+    [Nn]*)
+        echo -e "No files were deleted.\n"
+        break
+        ;;
+    *)
+        echo "Please answer y/n."
+        ;;
+    esac
+done
