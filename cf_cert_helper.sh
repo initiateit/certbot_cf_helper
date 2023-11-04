@@ -15,9 +15,11 @@ Usage: cf_certgen [options]
 
 Options:
 
-credential_file=/path/credential_file                   # Optional: Provide absolute path. Default: $HOME/.secrets/cloudflare.ini
-domains=www.example.com                                 # Required. Input the domain name or multiple using "," as a separator
-
+credential_file=/path/credential_file              # Optional: Provide absolute path. Default: $HOME/.secrets/cloudflare.ini
+domains=www.example.com                            # Required. Input the domain name or multiple using "," as a separator
+propagation_seconds=10                             # Optional: Default 10 seconds
+dry_run=true/false                                 # Optional: Certificate aquisition / renewal testing
+clean_up=true/false                                # Optional: Remove credential files after build. Default is True.
 
 EOF
 

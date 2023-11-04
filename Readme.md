@@ -1,4 +1,4 @@
-# cf_cert_gen
+# cf_cert_helper
 
 A simple helper for the Certbot Certificate Generator using the Cloudflare DNS plugin.
 You must have a valid cloudflare api token and for security we will not hardcode anything.
@@ -6,7 +6,7 @@ You must have a valid cloudflare api token and for security we will not hardcode
 Flags "certonly --agree-tos --non-interactive --dns-cloudflare" will be added by default.
 
 ```
-Usage: cf_certgen [options]
+Usage: ./cf_cert_helper.sh [options]
 
 Options:
 
