@@ -51,6 +51,7 @@ while [[ $# -gt 0 ]]; do
     "domains")
         if [[ -n "$value" ]]; then
             result_options["-d"]=$value
+            domains_set=true
         else
             echo "Error: you must specify at least one domain name."
             exit 1
