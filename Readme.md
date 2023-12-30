@@ -1,9 +1,21 @@
 # cf_cert_helper
 
-A simple helper for the Certbot Certificate Generator using the Cloudflare DNS plugin.
-You must have a valid cloudflare api token and for security we will not hardcode anything.
+A simple helper script for the Certbot Certificate Generator in combination with the Cloudflare DNS plugin.
+The script will take care of installing the needed programs and dependencies within a docker container 
+to generate a certificate.
 
-Flags "certonly --agree-tos --non-interactive --dns-cloudflare" will be added by default.
+The certbot flags "certonly --agree-tos --non-interactive --dns-cloudflare" will be added by default.
+
+
+### Requirements
+
+Docker and docker compose.
+
+You must have a valid cloudflare api token stored in a file. If you do not specify a credentials file 
+we will default to using the path: $HOME/.secrets/cloudflare.ini for the process.
+
+
+### How to use
 
 ```
 Usage: ./cf_cert_helper.sh [options]
