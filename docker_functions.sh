@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Create a container init script
 docker_ops() {
-cat <<EOF >container_init.sh
+    local docker_os="$1"
+    echo $docker_os
+    
+    cat <<EOF >container_init.sh
 #!/bin/shift
 
 # start the main application or service
@@ -11,22 +13,21 @@ exec "$@"
 # Infinite loop to keep container running for debug
 while true; do
     sleep 60
-
 done
 EOF
 
-# Make executable
-chmod +x container_init.sh
+    # Make executable
+    chmod +x container_init.sh
 
-# Now create the Dockerfile and pass the credentials
-echo -e "\nCreating Dockerfile...\n"
+    # Now create the Dockerfile and pass the credentials
+    echo -e "\nCreating Dockerfile...\n"
 
-cat <<EOF >>Dockerfile
-FROM $docker_os_image
+    cat <<EOF >>Dockerfile
+FROM $docker_os
 
 COPY container_init.sh /root/
 
-RUN echo "Credential file path: $credential_file"
+RUN echo "Credential file path: \$credential_file"
 RUN mkdir /root/.secrets
 COPY "cloudflare.ini" "/root/.secrets"
 
@@ -38,13 +39,13 @@ RUN apt-get update && \\
     rm -rf /var/lib/apt/lists/*
 EOF
 
-# Construct a Dockerfile so we can build our image
-export CERTBOT_CMD="$certbot_cmd"
-echo $CERTBOT_CMD
+    # Construct a Dockerfile so we can build our image
+    export CERTBOT_CMD="$certbot_cmd"
+    echo "$CERTBOT_CMD"
 
-# start build process and then start container
-echo -p "Docker compose build process starting, please wait..."
-docker compose build --no-cache
-echo -p "Docker container starting, please wait..."
-docker compose -p "$(hostname)" up -d
+    # Start the build process and then start the container
+    echo "Docker build process starting, please wait..."
+    docker build -t $docker_os .
+
+    echo "Docker container starting, please wait..."
 }

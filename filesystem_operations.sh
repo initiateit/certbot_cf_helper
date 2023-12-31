@@ -2,25 +2,54 @@
 
 # Adjust permissions to satisfy certbot requirements
 file_ops() {
-chmod 0700 "$(dirname "${result_options["--dns-cloudflare-credentials"]}")"
-chmod 0600 "${result_options["--dns-cloudflare-credentials"]}"
 
-# Copy credentials file to the working folder
+local credentials_file="$1"
 
-cp "${result_options["--dns-cloudflare-credentials"]}" .
+    # Adjust permissions to satisfy certbot requirements
+    chmod 0700 "$(dirname "$credentials_file")"
+    chmod 0600 "$credentials_file"
 
-# Check for ACL installation and set permissions
+    # Copy credentials file to the working folder
+    cp "$credentials_file" .
 
-if command -v getfacl &>/dev/null && command -v setfacl &>/dev/null && command -v certbot &>/dev/null; then
-    echo "ACL is installed. Setting permissions..."
-    if [[ -n "${expected_args["setfacl_letsencrypt"]}" ]]; then
-        echo -e "sudo setfacl -m u:"${expected_args["setfacl_letsencrypt"]}":rwx /etc/letsencrypt"
-    else
-        echo "No value provided for setfacl_letsencrypt."
-        exit 1
-    fi
-else
-    echo "Certbot and ACL are not installed. You need to do this first."
+#Check for required programs
+
+missing_programs=()
+
+if ! command -v getfacl &>/dev/null; then
+    missing_programs+=("getfacl")
+fi
+
+if ! command -v setfacl &>/dev/null; then
+    missing_programs+=("setfacl")
+fi
+
+if ! command -v certbot &>/dev/null; then
+    missing_programs+=("certbot")
+fi
+
+if ! (command -v docker &>/dev/null); then
+    missing_programs+=("docker")
+fi
+
+if ! (command -v "docker-compose" &>/dev/null); then
+    missing_programs+=("docker-compose")
+fi
+
+if ! (command -v "slirp4netns" &>/dev/null); then
+    missing_programs+=("slirp4netns")
+fi
+
+if [ ${#missing_programs[@]} -gt 0 ]; then
+    printf "The following programs were not found:\n\n"
+    for program in "${missing_programs[@]}"; do
+        echo "$program"
+    done
+    printf "\nPlease install them first.\n"
+    rm "$dns_cloudflare_credentials_path"
     exit 1
+else
+    echo "All required tools are installed. Continuing..."
+    # Additional logic here
 fi
 }

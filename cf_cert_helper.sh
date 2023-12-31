@@ -5,16 +5,16 @@ source filesystem_operations.sh
 source clean_up.sh
 
 # Define the expected argument names in an associative array.
-
 declare -A expected_args=(
     ["credential_file"]="--dns-cloudflare-credentials"
     ["cf_api_token"]=""
-    ["overwrite_cred_file"]=""
     ["domains"]="-d"
     ["propagation_seconds"]="--dns-cloudflare-propagation-seconds"
     ["setfacl_letsencrypt"]=""
     ["dry_run"]="--dry-run"
+    ["docker_os"]="--docker-os"
     ["clean_up"]="--clean-up"
+
 )
 
 # Initialize the resulting associative array
@@ -30,9 +30,6 @@ for arg in "$@"; do
     "cf_api_token")
         expected_args["cf_api_token"]="$value"
         ;;
-    "overwrite_cred_file")
-        expected_args["overwrite_cred_file"]="$value"
-        ;;
     "domains")
         if [[ -n "$value" ]]; then
             result_options["-d"]="$value"
@@ -44,6 +41,17 @@ for arg in "$@"; do
         ;;
     "setfacl_letsencrypt")
         expected_args["setfacl_letsencrypt"]="$value"
+        ;;
+    "docker_os")
+        if [[ -n "$value" ]]; then
+            result_options["-d"]="$value"
+            expected_args["docker_os"]="$value"
+        else
+            expected_args["docker_os"]="ubuntu:latest"
+        fi
+        ;;
+    "clean_up")
+        expected_args["clean_up"]="$value"
         ;;
     *)
         if [[ -n "${expected_args[$name]}" ]]; then
@@ -66,11 +74,6 @@ if [[ "$domains_set" == false ]]; then
     exit 1
 fi
 
-if [[ "${expected_args["overwrite_cred_file"]}" != "true" ]]; then
-    echo "overwrite_cred_file not set to true. Exiting."
-    exit 1
-fi
-
 if [[ -z "${result_options["--dns-cloudflare-credentials"]}" ]]; then
     result_options["--dns-cloudflare-credentials"]="$HOME/.secrets/cloudflare.ini"
 fi
@@ -87,20 +90,25 @@ fi
 # Save the credential file path to a variable
 dns_cloudflare_credentials_path="${result_options["--dns-cloudflare-credentials"]}"
 
+
 # Construct the certbot command using the result associative array
 certbod_cmd="certbot certonly --dns-cloudflare --agree-tos --non-interactive"
 for key in "${!result_options[@]}"; do
     certbod_cmd+=" $key ${result_options[$key]}"
 done
 
-file_ops
-#docker_ops
 
-if [[ ${expected_args["clean_up"]} != false ]]; then
+
+# File, program checks and setting permissions
+file_ops "${result_options["--dns-cloudflare-credentials"]}"
+
+# Build the image & Start the container
+docker_ops "${expected_args["docker_os"]}"
+
+if [[ "${expected_args["clean_up"]}" != "false" ]]; then
     clean_files "$dns_cloudflare_credentials_path"
 else
     echo "Not cleaning up. Exiting."
     exit 1
 fi
-
 

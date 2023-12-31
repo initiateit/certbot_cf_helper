@@ -1,11 +1,11 @@
-#!bin/bash
+#!/bin/bash
 
 clean_files() {
     # Clean Up
     echo "Cleanup running"
 
     # Pass $credential_file as an argument
-    clean_up=("Dockerfile" "container_init.sh" "$1")
+    clean_up=("Dockerfile" "container_init.sh" "cloudflare.ini" "$1")
 
     # Use an array to store filenames for deletion
     files_to_delete=()
@@ -27,3 +27,4 @@ clean_files() {
         echo "No files to delete."
     fi
 }
+
